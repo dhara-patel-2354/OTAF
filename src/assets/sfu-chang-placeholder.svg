@@ -1,0 +1,10 @@
+<svg width="240" height="76" viewBox="0 0 240 76" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SFU Chang Institute placeholder logo</title>
+  <desc id="desc">A simple placeholder mark for the SFU Chang Institute.</desc>
+  <rect width="240" height="76" rx="14" fill="#FFFDFB"/>
+  <rect x="14" y="14" width="48" height="48" rx="12" fill="#8D668A"/>
+  <path d="M25 39.5H51" stroke="#FFFDFB" stroke-width="5" stroke-linecap="round"/>
+  <path d="M38 26.5V52.5" stroke="#FFFDFB" stroke-width="5" stroke-linecap="round"/>
+  <text x="76" y="34" fill="#3F2C45" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">SFU Chang</text>
+  <text x="76" y="54" fill="#76657A" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Institute</text>
+</svg>
