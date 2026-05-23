@@ -1,9 +1,18 @@
 import { Building2, CircleCheck, HeartHandshake } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Footer from '../components/Footer.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import Navbar from '../components/Navbar.jsx';
 import ShelterCard from '../components/ShelterCard.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
+import { serviceOptions } from '../data/mockData.js';
+
+const cardsPerPage = 12;
+
+function getUpdatedTimestamp(updatedAt) {
+  const timestamp = Date.parse(updatedAt);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
 
 function PublicSummaryPanel({ shelters }) {
   const availableCount = shelters.filter((shelter) => shelter.status === 'Available').length;
@@ -49,6 +58,132 @@ function PublicSummaryPanel({ shelters }) {
 
 export default function PublicDashboard() {
   const { shelters } = useAppData();
+  const [filters, setFilters] = useState({
+    availability: '',
+    city: '',
+    services: [],
+    population: ''
+  });
+  const [sortBy, setSortBy] = useState('Nearest');
+  const [visibleCount, setVisibleCount] = useState(cardsPerPage);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreRef = useRef(null);
+
+  const filterOptions = useMemo(
+    () => ({
+      availability: ['Available', 'Unavailable', 'Unknown'],
+      cities: [...new Set(shelters.map((shelter) => shelter.location))].sort(),
+      services: [
+        ...new Set([
+          ...serviceOptions,
+          ...shelters.flatMap((shelter) => shelter.serviceCategories)
+        ])
+      ].sort(),
+      populations: [...new Set(shelters.flatMap((shelter) => shelter.populationCategories))].sort()
+    }),
+    [shelters]
+  );
+
+  const filteredShelters = useMemo(() => {
+    const statusRank = {
+      Available: 0,
+      Unavailable: 1,
+      Unknown: 2
+    };
+
+    return [...shelters]
+      .filter((shelter) => {
+        const statusMatches = filters.availability
+          ? shelter.status === filters.availability
+          : true;
+        const cityMatches = filters.city ? shelter.location === filters.city : true;
+        const serviceMatches = filters.services.length
+          ? filters.services.every((service) => shelter.serviceCategories.includes(service))
+          : true;
+        const populationMatches = filters.population
+          ? shelter.populationCategories.includes(filters.population)
+          : true;
+
+        return statusMatches && cityMatches && serviceMatches && populationMatches;
+      })
+      .sort((firstShelter, secondShelter) => {
+        if (sortBy === 'Availability') {
+          return (
+            (statusRank[firstShelter.status] ?? 3) -
+            (statusRank[secondShelter.status] ?? 3)
+          );
+        }
+
+        if (sortBy === 'Name') {
+          return firstShelter.name.localeCompare(secondShelter.name);
+        }
+
+        if (sortBy === 'Recently updated') {
+          return (
+            getUpdatedTimestamp(secondShelter.updatedAt) -
+            getUpdatedTimestamp(firstShelter.updatedAt)
+          );
+        }
+
+        return 0;
+      });
+  }, [filters, shelters, sortBy]);
+
+  const visibleShelters = filteredShelters.slice(0, visibleCount);
+  const hasMoreShelters = visibleCount < filteredShelters.length;
+
+  function handleFilterChange(filterName, value) {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [filterName]: value
+    }));
+  }
+
+  function clearFilter(filterName, value) {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [filterName]: Array.isArray(currentFilters[filterName])
+        ? currentFilters[filterName].filter((item) => item !== value)
+        : ''
+    }));
+  }
+
+  useEffect(() => {
+    setVisibleCount(cardsPerPage);
+  }, [filters, sortBy]);
+
+  useEffect(() => {
+    if (!hasMoreShelters || isLoadingMore) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        setIsLoadingMore(true);
+        window.setTimeout(() => {
+          setVisibleCount((currentCount) => currentCount + cardsPerPage);
+          setIsLoadingMore(false);
+        }, 500);
+      },
+      { rootMargin: '240px 0px' }
+    );
+
+    const loadMoreElement = loadMoreRef.current;
+
+    if (loadMoreElement) {
+      observer.observe(loadMoreElement);
+    }
+
+    return () => {
+      if (loadMoreElement) {
+        observer.unobserve(loadMoreElement);
+      }
+    };
+  }, [hasMoreShelters, isLoadingMore]);
 
   return (
     <div className="min-h-screen bg-that-page text-that-text">
@@ -58,13 +193,29 @@ export default function PublicDashboard() {
         <PublicSummaryPanel shelters={shelters} />
 
         <section className="flex min-w-0 flex-col gap-5">
-          <FilterBar />
+          <FilterBar
+            filters={filters}
+            options={filterOptions}
+            sortBy={sortBy}
+            onFilterChange={handleFilterChange}
+            onSortChange={setSortBy}
+            onClearFilter={clearFilter}
+          />
 
           <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {shelters.map((shelter) => (
+            {visibleShelters.map((shelter) => (
               <ShelterCard key={shelter.id} shelter={shelter} />
             ))}
           </div>
+
+          {(hasMoreShelters || isLoadingMore) && (
+            <div
+              className="flex min-h-16 items-center justify-center rounded-lg border border-that-border bg-that-card px-4 py-4 text-sm font-bold text-that-muted shadow-card"
+              ref={loadMoreRef}
+            >
+              {isLoadingMore ? 'Loading more shelters...' : 'Scroll to load more shelters'}
+            </div>
+          )}
         </section>
       </main>
 

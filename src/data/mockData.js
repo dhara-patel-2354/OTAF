@@ -1,4 +1,25 @@
-export const workerShelterId = 'shimai-transition-house';
+import transitionHousesCsv from '../../BC_Transition_Houses_Safe_Homes.csv?raw';
+
+export const serviceOptions = [
+  '24hr In-House Staff',
+  'Alcohol & Drug Counselling',
+  'Animal Friendly',
+  'Children Counselling',
+  'Community-Based Victim Services',
+  'Follow Up',
+  'In-House Counselling',
+  'Legal Advocacy',
+  'Men Who Use Violence',
+  'Older Women',
+  'Outreach',
+  'Service for the Blind',
+  'Service for the Deaf',
+  'Sexual Assault',
+  'Stopping the Violence Counselling',
+  'Support Groups',
+  'Transportation',
+  'Wheelchair Access'
+];
 
 export const populationOptions = [
   'Women-Only',
@@ -8,78 +29,73 @@ export const populationOptions = [
   'Youth'
 ];
 
-export const serviceOptions = [
-  '24hr In-House Staff',
-  'Children Counselling',
-  'Legal Advocacy',
-  'Alcohol & Drug Counselling',
-  'Safety Planning'
-];
+function parseCsvLine(line) {
+  const values = [];
+  let currentValue = '';
+  let isQuoted = false;
 
-export const initialShelters = [
-  {
-    id: workerShelterId,
-    name: 'Shimai Transition House',
-    organization: 'Atira Women’s Resource Society',
-    status: 'Unavailable',
-    location: 'Surrey',
-    updatedAt: '2026-03-09 11:24 PM',
-    populationCategories: ['Women-Only', 'Children Accepted', 'Animal Friendly'],
-    serviceCategories: [
-      '24hr In-House Staff',
-      'Children Counselling',
-      'Legal Advocacy',
-      'Alcohol & Drug Counselling'
-    ],
-    moreInfo: 'Please make sure to call us for an intake process.',
-    partnered: true
-  },
-  {
-    id: 'maxxine-wright-shelter',
-    name: 'Maxxine Wright Shelter',
-    organization: 'Atira Women’s Resource Society',
-    status: 'Available',
-    location: 'Surrey',
-    updatedAt: '2026-03-09 10:52 PM',
-    populationCategories: ['Women-Only', 'Children Accepted'],
-    serviceCategories: ['24hr In-House Staff', 'Children Counselling', 'Safety Planning'],
-    moreInfo: 'Call ahead for intake availability and current bed details.',
-    partnered: true
-  },
-  {
-    id: 'virginia-sam-transition-house',
-    name: 'Virginia Sam Transition House',
-    organization: 'Options Community Services Society',
-    status: 'Available',
-    location: 'Surrey/Newton',
-    updatedAt: '2026-03-09 09:47 PM',
-    populationCategories: ['Women-Only', 'Children Accepted'],
-    serviceCategories: ['24hr In-House Staff', 'Legal Advocacy', 'Safety Planning'],
-    moreInfo: 'Support workers are available for confidential safety planning.',
-    partnered: true
-  },
-  {
-    id: 'evergreen-transition-house',
-    name: 'Evergreen Transition House',
-    organization: 'Options Community Services Society',
-    status: 'Unknown—Organization not partnered yet!',
-    location: 'Surrey/Newton',
-    updatedAt: 'Pending partnership',
-    populationCategories: ['Women-Only'],
-    serviceCategories: ['Safety Planning'],
-    moreInfo: 'This organization is not partnered yet. Please verify details directly.',
-    partnered: false
-  },
-  {
-    id: 'ama-house-for-older-women',
-    name: 'Ama House for Older Women',
-    organization: 'Atira Women’s Resource Society',
-    status: 'Unavailable',
-    location: 'South Surrey',
-    updatedAt: '2026-03-08 07:16 PM',
-    populationCategories: ['Women-Only', 'Older Women'],
-    serviceCategories: ['24hr In-House Staff', 'Legal Advocacy'],
-    moreInfo: 'Priority support for older women. Call for intake information.',
-    partnered: true
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    const nextCharacter = line[index + 1];
+
+    if (character === '"' && nextCharacter === '"') {
+      currentValue += '"';
+      index += 1;
+    } else if (character === '"') {
+      isQuoted = !isQuoted;
+    } else if (character === ',' && !isQuoted) {
+      values.push(currentValue.trim());
+      currentValue = '';
+    } else {
+      currentValue += character;
+    }
   }
-];
+
+  values.push(currentValue.trim());
+  return values;
+}
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function parseTransitionHousesCsv(csv) {
+  const [headerLine, ...rows] = csv.trim().split(/\r?\n/);
+  const headers = parseCsvLine(headerLine);
+
+  return rows
+    .filter((row) => row.trim())
+    .map((row, index) => {
+      const values = parseCsvLine(row);
+      const record = Object.fromEntries(
+        headers.map((header, headerIndex) => [header, values[headerIndex] ?? ''])
+      );
+      const contactLines = [
+        record.Phone ? `Phone: ${record.Phone}` : '',
+        record['Toll Free'] ? `Toll free: ${record['Toll Free']}` : '',
+        record['Text Only'] ? `Text only: ${record['Text Only']}` : ''
+      ].filter(Boolean);
+      const id = `${slugify(record.Program || record.Organization)}-${index + 1}`;
+
+      return {
+        id,
+        name: record.Program,
+        organization: record.Organization,
+        status: 'Unknown',
+        location: record.Location,
+        updatedAt: 'From BC transition houses CSV',
+        populationCategories: [record.Type].filter(Boolean),
+        serviceCategories: [record.Type].filter(Boolean),
+        moreInfo: contactLines.length
+          ? contactLines.join(' | ')
+          : 'Contact information was not included in the CSV.',
+        partnered: true
+      };
+    });
+}
+
+export const initialShelters = parseTransitionHousesCsv(transitionHousesCsv);
+export const workerShelterId = initialShelters[0]?.id ?? 'transition-house';
