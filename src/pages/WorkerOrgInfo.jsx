@@ -30,7 +30,7 @@ function toggleValue(values, value) {
 
 export default function WorkerOrgInfo() {
   const navigate = useNavigate();
-  const { workerAccount, updateWorkerAccount } = useAppData();
+  const { createWorker, workerAccount } = useAppData();
   const categoryOptions = [...populationOptions, ...serviceOptions];
   const [form, setForm] = useState({
     organizationName: workerAccount.organizationName,
@@ -55,7 +55,7 @@ export default function WorkerOrgInfo() {
     setForm({ ...form, categories: toggleValue(form.categories, category) });
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (!form.organizationName.trim()) {
@@ -63,8 +63,14 @@ export default function WorkerOrgInfo() {
       return;
     }
 
-    updateWorkerAccount(form);
-    navigate('/worker/pending');
+    const result = await createWorker(form);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    navigate(result.worker.approvalStatus === 'approved' ? '/worker/dashboard' : '/worker/pending');
   }
 
   return (

@@ -1,6 +1,7 @@
 import { Menu, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useAppData } from '../context/AppDataContext.jsx';
 
 const navItems = [
   { label: 'Dashboard', to: '/' },
@@ -39,6 +40,7 @@ function PublicLinks({ onNavigate }) {
 
 export default function Navbar({ showSignOut = false, title, variant = 'public' }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { signOut } = useAppData();
   const isWorker = variant === 'worker';
 
   return (
@@ -76,6 +78,7 @@ export default function Navbar({ showSignOut = false, title, variant = 'public' 
               {showSignOut && (
                 <Link
                   className="rounded-lg bg-that-accent px-4 py-2 text-white shadow-sm transition hover:bg-that-accentDark"
+                  onClick={signOut}
                   to="/"
                 >
                   Sign out

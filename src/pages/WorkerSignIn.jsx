@@ -1,27 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
+import { useAppData } from '../context/AppDataContext.jsx';
 
 export default function WorkerSignIn() {
   const navigate = useNavigate();
+  const { signIn } = useAppData();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const nextErrors = {};
     const email = form.email.trim().toLowerCase();
     if (!email) {
       nextErrors.email = 'Email is required.';
-    } else if (!email.endsWith('@techalonglabs.com')) {
-      nextErrors.email = 'Use your @techalonglabs.com email address.';
     }
     if (!form.password.trim()) nextErrors.password = 'Password is required.';
 
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length === 0) {
+      const result = await signIn(email, form.password);
+
+      if (!result.ok) {
+        setErrors({ form: result.error });
+        return;
+      }
+
+      if (result.worker.approvalStatus !== 'approved') {
+        navigate('/worker/pending');
+        return;
+      }
+
       navigate('/worker/dashboard');
     }
   }
@@ -74,6 +86,10 @@ export default function WorkerSignIn() {
           >
             Sign in
           </button>
+
+          {errors.form && (
+            <p className="mt-3 text-sm font-semibold text-that-red">{errors.form}</p>
+          )}
 
           <p className="mt-5 text-base font-medium text-that-text">
             Don't have an account?{' '}

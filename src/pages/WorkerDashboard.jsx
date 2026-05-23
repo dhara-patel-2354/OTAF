@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { Check, Clock3, Home, Plus, Save, X } from 'lucide-react';
 import FilterBar from '../components/FilterBar.jsx';
 import Footer from '../components/Footer.jsx';
@@ -59,7 +60,7 @@ function EditableSection({ options, title, values, onToggle }) {
 }
 
 export default function WorkerDashboard() {
-  const { shelters, workerShelter, updateShelter, workerShelterId } = useAppData();
+  const { currentWorker, shelters, workerShelter, updateShelter, workerShelterId } = useAppData();
   const [form, setForm] = useState(workerShelter);
   const [filters, setFilters] = useState({
     availability: '',
@@ -127,6 +128,14 @@ export default function WorkerDashboard() {
   useEffect(() => {
     setForm(workerShelter);
   }, [workerShelter]);
+
+  if (!currentWorker) {
+    return <Navigate to="/worker/sign-in" replace />;
+  }
+
+  if (currentWorker.approvalStatus !== 'approved') {
+    return <Navigate to="/worker/pending" replace />;
+  }
 
   if (!form) {
     return null;

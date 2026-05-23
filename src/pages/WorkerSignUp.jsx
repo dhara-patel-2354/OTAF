@@ -19,8 +19,6 @@ export default function WorkerSignUp() {
     const email = form.email.trim().toLowerCase();
     if (!email) {
       nextErrors.email = 'Email is required.';
-    } else if (!email.endsWith('@techalonglabs.com')) {
-      nextErrors.email = 'Use your @techalonglabs.com email address.';
     }
     if (!form.password.trim()) nextErrors.password = 'Password is required.';
 
