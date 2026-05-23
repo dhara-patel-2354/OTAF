@@ -11,7 +11,12 @@ export default function WorkerSignIn() {
     event.preventDefault();
 
     const nextErrors = {};
-    if (!form.email.trim()) nextErrors.email = 'Email is required.';
+    const email = form.email.trim().toLowerCase();
+    if (!email) {
+      nextErrors.email = 'Email is required.';
+    } else if (!email.endsWith('@techalonglabs.com')) {
+      nextErrors.email = 'Use your @techalonglabs.com email address.';
+    }
     if (!form.password.trim()) nextErrors.password = 'Password is required.';
 
     setErrors(nextErrors);
@@ -22,58 +27,57 @@ export default function WorkerSignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-that-page text-that-text">
+    <div className="min-h-screen bg-white text-that-text">
       <Navbar variant="worker" title="Worker Sign In" />
 
-      <main className="mx-auto flex w-full max-w-[1512px] justify-center px-4 py-10 sm:px-6 lg:px-8">
+      <main className="mx-auto flex w-full max-w-[430px] justify-center px-5 py-24 sm:px-6">
         <form
-          className="w-full max-w-lg rounded-lg border border-that-border bg-that-card p-6 shadow-card sm:p-8"
+          className="w-full"
           onSubmit={handleSubmit}
         >
-          <p className="text-sm font-bold uppercase tracking-[0.12em] text-that-accent">
-            Worker Portal
-          </p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight">Sign in</h1>
-          <p className="mt-3 text-sm font-medium leading-6 text-that-muted">
-            Manage shelter availability and keep public information current.
+          <h1 className="text-center text-3xl font-medium tracking-tight text-that-text">
+            Welcome!
+          </h1>
+          <p className="mx-auto mt-5 max-w-[320px] text-center text-lg font-medium leading-6 text-that-text">
+            Sign in to manage your transition house availability and information.
           </p>
 
-          <div className="mt-7 space-y-5">
+          <div className="mt-7 space-y-4">
             <label className="block">
-              <span className="text-sm font-bold text-that-text">Email</span>
+              <span className="text-base font-medium text-that-text">Email</span>
               <input
-                className="mt-2 w-full rounded-lg border border-that-border bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
+                className="mt-2 w-full rounded-md border border-that-border bg-white px-4 py-3 text-base font-medium outline-none transition placeholder:text-that-muted/60 focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm({ ...form, email: event.target.value })}
-                placeholder="worker@example.org"
+                placeholder="Value"
               />
               {errors.email && <span className="mt-2 block text-sm font-semibold text-that-red">{errors.email}</span>}
             </label>
 
             <label className="block">
-              <span className="text-sm font-bold text-that-text">Password</span>
+              <span className="text-base font-medium text-that-text">Password</span>
               <input
-                className="mt-2 w-full rounded-lg border border-that-border bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
+                className="mt-2 w-full rounded-md border border-that-border bg-white px-4 py-3 text-base font-medium outline-none transition placeholder:text-that-muted/60 focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
                 type="password"
                 value={form.password}
                 onChange={(event) => setForm({ ...form, password: event.target.value })}
-                placeholder="Enter password"
+                placeholder="Value"
               />
               {errors.password && <span className="mt-2 block text-sm font-semibold text-that-red">{errors.password}</span>}
             </label>
           </div>
 
           <button
-            className="mt-7 w-full rounded-lg bg-that-accent px-5 py-3 text-base font-extrabold text-white shadow-sm transition hover:bg-that-accentDark"
+            className="mt-5 w-full rounded-md bg-[#2f2f2f] px-5 py-3 text-base font-medium text-white shadow-sm transition hover:bg-that-text"
             type="submit"
           >
-            Sign In
+            Sign in
           </button>
 
-          <p className="mt-5 text-center text-sm font-semibold text-that-muted">
-            Need an account?{' '}
-            <Link className="text-that-accentDark underline decoration-that-accent/40 underline-offset-4" to="/worker/sign-up">
+          <p className="mt-5 text-base font-medium text-that-text">
+            Don't have an account?{' '}
+            <Link className="font-extrabold text-that-text underline underline-offset-2" to="/worker/sign-up">
               Sign up
             </Link>
           </p>
