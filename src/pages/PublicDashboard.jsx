@@ -189,10 +189,12 @@ export default function PublicDashboard() {
     <div className="min-h-screen bg-that-page text-that-text">
       <Navbar />
 
-      <main className="mx-auto grid w-full max-w-[1512px] items-start gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-8 lg:px-8">
-        <PublicSummaryPanel shelters={shelters} />
+      <main className="mx-auto flex w-full max-w-[1512px] flex-col gap-6 px-4 py-5 sm:px-6 lg:flex-row lg:items-start lg:px-8">
+        <div className="w-full lg:w-[320px] lg:shrink-0">
+          <PublicSummaryPanel shelters={shelters} />
+        </div>
 
-        <section className="flex min-w-0 flex-col gap-5">
+        <section className="flex w-full min-w-0 flex-1 flex-col gap-6">
           <FilterBar
             filters={filters}
             options={filterOptions}
@@ -202,7 +204,7 @@ export default function PublicDashboard() {
             onClearFilter={clearFilter}
           />
 
-          <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {visibleShelters.map((shelter) => (
               <ShelterCard key={shelter.id} shelter={shelter} />
             ))}

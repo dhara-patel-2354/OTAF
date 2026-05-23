@@ -146,7 +146,7 @@ export default function FilterBar({
           activeChips.map(([key, value]) => (
             <span
               className="inline-flex items-center gap-2 rounded-full border border-that-border bg-that-soft px-3 py-1.5 text-sm font-bold text-that-text"
-              key={key}
+              key={`${key}-${value}`}
             >
               {value}
               <button
