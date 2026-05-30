@@ -80,7 +80,7 @@ export function createWorkerAccount(account, shelters) {
     password: account.password,
     organizationName: account.organizationName.trim(),
     organizationId: matchedShelter?.id ?? '',
-    approvalStatus: matchedShelter ? 'approved' : 'pending',
+    approvalStatus: 'pending',
     categories: account.categories,
     populationTags: account.populationTags,
     moreInfo: account.moreInfo,

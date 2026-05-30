@@ -71,6 +71,7 @@ export default function WorkerDashboard() {
   const [sortBy, setSortBy] = useState('Nearest');
   const [pendingStatus, setPendingStatus] = useState('');
   const [saved, setSaved] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const filterOptions = useMemo(
     () => ({
@@ -188,7 +189,7 @@ export default function WorkerDashboard() {
     <div className="min-h-screen bg-that-page text-that-text">
       <Navbar variant="worker" title="Manage Availability" showSignOut />
 
-      <main className="mx-auto flex w-full max-w-[1512px] flex-col gap-6 px-4 py-5 sm:px-6 lg:flex-row lg:items-start lg:px-8">
+      <main className="mx-auto flex w-full max-w-[1512px] flex-col gap-6 px-4 pb-8 pt-5 sm:px-6 lg:flex-row lg:items-start lg:px-8">
         <form
           className="w-full rounded-lg border border-that-border bg-that-card p-5 shadow-card sm:p-6 lg:w-[340px] lg:shrink-0"
           onSubmit={handleSubmit}
@@ -323,10 +324,20 @@ export default function WorkerDashboard() {
           />
 
           <div className="grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-            {filteredShelters.map((shelter) => (
+            {filteredShelters.slice(0, visibleCount).map((shelter) => (
               <ShelterCard key={shelter.id} shelter={shelter} />
             ))}
           </div>
+
+          {visibleCount < filteredShelters.length && (
+            <button
+              className="flex min-h-11 items-center justify-center rounded-lg border border-that-border bg-that-card px-4 py-3 text-sm font-extrabold text-that-text shadow-sm transition hover:border-that-accent hover:bg-white"
+              type="button"
+              onClick={() => setVisibleCount((c) => c + 5)}
+            >
+              Load 5 more shelters
+            </button>
+          )}
         </section>
       </main>
 

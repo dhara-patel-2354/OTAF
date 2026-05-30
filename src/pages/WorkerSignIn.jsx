@@ -1,21 +1,53 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
+import { isValidEmail, normalizeEmail } from '../data/email.js';
+
+function workerDashboardPath(worker) {
+  return worker.organizationId ? `/worker/dashboard/${worker.organizationId}` : '/worker/dashboard';
+}
 
 export default function WorkerSignIn() {
   const navigate = useNavigate();
-  const { signIn } = useAppData();
+  const { currentWorker, isLoadingWorker, signIn } = useAppData();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (!isLoadingWorker && currentWorker?.approvalStatus === 'approved') {
+      navigate(workerDashboardPath(currentWorker), { replace: true });
+    }
+  }, [currentWorker, isLoadingWorker, navigate]);
+
+  if (isLoadingWorker) {
+    return (
+      <div className="h-[111.12vh] overflow-hidden bg-white text-that-text">
+        <Navbar variant="worker" title="Worker Sign In" />
+        <main className="mx-auto flex min-h-[50vh] w-full max-w-[430px] items-center justify-center px-5 py-24 sm:px-6">
+          <p className="text-sm font-extrabold text-that-muted">Checking your session...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (currentWorker?.approvalStatus !== 'approved' && currentWorker) {
+    return <Navigate to="/worker/pending" replace />;
+  }
+
+  if (currentWorker?.approvalStatus === 'approved') {
+    return <Navigate to={workerDashboardPath(currentWorker)} replace />;
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
     const nextErrors = {};
-    const email = form.email.trim().toLowerCase();
+    const email = normalizeEmail(form.email);
     if (!email) {
       nextErrors.email = 'Email is required.';
+    } else if (!isValidEmail(email)) {
+      nextErrors.email = 'Enter a valid email address.';
     }
     if (!form.password.trim()) nextErrors.password = 'Password is required.';
 
@@ -34,12 +66,12 @@ export default function WorkerSignIn() {
         return;
       }
 
-      navigate('/worker/dashboard');
+      navigate(workerDashboardPath(result.worker));
     }
   }
 
   return (
-    <div className="min-h-screen bg-white text-that-text">
+    <div className="h-[111.12vh] overflow-hidden bg-white text-that-text">
       <Navbar variant="worker" title="Worker Sign In" />
 
       <main className="mx-auto flex w-full max-w-[430px] justify-center px-5 py-24 sm:px-6">

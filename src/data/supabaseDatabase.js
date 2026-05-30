@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { normalizeEmail } from './email.js';
 
 function toShelter(record) {
   return {
@@ -91,10 +92,12 @@ export async function loadCurrentWorkerFromSupabase() {
 
 export async function createSupabaseWorkerAccount(account, shelters) {
   const matchedShelter = findOrganizationMatch(account.organizationName, shelters);
-  const approvalStatus = matchedShelter ? 'approved' : 'pending';
+  const categories = account.categories ?? [];
+  const populationTags = account.populationTags ?? [];
+  const moreInfo = account.moreInfo?.trim() ?? '';
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: account.email.trim().toLowerCase(),
+    email: normalizeEmail(account.email),
     password: account.password
   });
 
@@ -116,13 +119,13 @@ export async function createSupabaseWorkerAccount(account, shelters) {
 
   const profile = {
     user_id: userId,
-    email: account.email.trim().toLowerCase(),
+    email: normalizeEmail(account.email),
     organization_name: account.organizationName.trim(),
     organization_id: matchedShelter?.id ?? null,
-    approval_status: approvalStatus,
-    categories: account.categories,
-    population_tags: account.populationTags,
-    more_info: account.moreInfo
+    approval_status: 'pending',
+    categories,
+    population_tags: populationTags,
+    more_info: moreInfo
   };
 
   const { data, error } = await supabase
@@ -146,7 +149,7 @@ export async function createSupabaseWorkerAccount(account, shelters) {
 
 export async function signInSupabaseWorker(email, password) {
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email: email.trim().toLowerCase(),
+    email: normalizeEmail(email),
     password
   });
 
@@ -170,9 +173,21 @@ export async function signInSupabaseWorker(email, password) {
     };
   }
 
+  const worker = toWorker(data);
+
+  if (worker.approvalStatus === 'approved' && worker.organizationId) {
+    const syncedShelter = await syncApprovedWorkerToOrganization(worker);
+
+    return {
+      ok: true,
+      worker,
+      updatedShelter: syncedShelter
+    };
+  }
+
   return {
     ok: true,
-    worker: toWorker(data)
+    worker
   };
 }
 
@@ -200,6 +215,43 @@ export async function updateSupabaseShelter(id, updates) {
     .from('organizations')
     .update(payload)
     .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return toShelter(data);
+}
+
+export async function syncApprovedWorkerToOrganization(worker) {
+  const payload = {
+    service_categories: worker.categories,
+    population_categories: worker.populationTags,
+    more_info: worker.moreInfo,
+    updated_at_label: 'Updated from approved worker profile',
+    updated_at: new Date().toISOString()
+  };
+
+  Object.keys(payload).forEach((key) => {
+    if (Array.isArray(payload[key]) && payload[key].length === 0) {
+      delete payload[key];
+    }
+
+    if (payload[key] === undefined || payload[key] === '') {
+      delete payload[key];
+    }
+  });
+
+  if (Object.keys(payload).length === 2) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('organizations')
+    .update(payload)
+    .eq('id', worker.organizationId)
     .select()
     .single();
 

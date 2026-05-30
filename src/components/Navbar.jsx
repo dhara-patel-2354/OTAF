@@ -1,12 +1,12 @@
-import { Menu, ShieldCheck, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAppData } from '../context/AppDataContext.jsx';
 
 const navItems = [
   { label: 'Dashboard', to: '/' },
-  { label: 'FAQ', to: '/#faq' },
-  { label: 'Resources', to: '/#resources' }
+  { label: 'FAQ', to: '/faq' },
+  { label: 'Resources', to: '/resources' }
 ];
 
 function PublicLinks({ onNavigate }) {
@@ -48,21 +48,24 @@ export default function Navbar({ showSignOut = false, title, variant = 'public' 
       <nav className="mx-auto max-w-[1512px] px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link className="flex min-w-0 items-center gap-3" to="/">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-that-accent text-white">
-              <ShieldCheck className="h-5 w-5" strokeWidth={2.2} />
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="text-sm font-semibold tracking-normal text-that-accent">TechAlong</span>
+              <div className="relative h-9 w-9 shrink-0">
+                <div className="absolute left-1/2 top-[2px] h-6 w-6 -translate-x-1/2 rotate-45 rounded-[3px] bg-[#d8bbdc]" />
+                <div className="absolute bottom-[4px] left-[4px] h-5 w-5 skew-y-[28deg] rounded-[3px] bg-that-accent/90" />
+                <div className="absolute bottom-[4px] right-[4px] h-5 w-5 -skew-y-[28deg] rounded-[3px] bg-[#a684ab]" />
+              </div>
+              <span className="text-sm font-semibold tracking-normal text-that-accent">Labs</span>
             </div>
 
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-that-accentDark">
-                  TechAlong Labs
-                </p>
-                <p className="text-xl font-extrabold leading-none text-that-text">
-                  THAT
-                </p>
-              </div>
-              <p className="mt-1 text-sm font-medium text-that-muted">
-                {title || 'Transition House Availability Tracker'}
+            <div className="hidden min-w-0 items-center gap-2 sm:flex">
+              <p className="text-2xl font-extrabold leading-none tracking-normal text-that-text">
+                OTAF
+              </p>
+              <p className="max-w-[90px] text-[10px] font-semibold leading-tight text-that-muted">
+                One Tap
+                <br />
+                Away Finder
               </p>
             </div>
           </Link>

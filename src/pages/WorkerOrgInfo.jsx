@@ -5,6 +5,10 @@ import Navbar from '../components/Navbar.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { populationOptions, serviceOptions } from '../data/mockData.js';
 
+function workerDashboardPath(worker) {
+  return worker.organizationId ? `/worker/dashboard/${worker.organizationId}` : '/worker/dashboard';
+}
+
 function TogglePill({ active, label, onClick }) {
   return (
     <button
@@ -70,7 +74,7 @@ export default function WorkerOrgInfo() {
       return;
     }
 
-    navigate(result.worker.approvalStatus === 'approved' ? '/worker/dashboard' : '/worker/pending');
+    navigate(result.worker.approvalStatus === 'approved' ? workerDashboardPath(result.worker) : '/worker/pending');
   }
 
   return (

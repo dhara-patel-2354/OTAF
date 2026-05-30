@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
+import { isValidEmail, normalizeEmail } from '../data/email.js';
 
 export default function WorkerSignUp() {
   const navigate = useNavigate();
@@ -16,16 +17,18 @@ export default function WorkerSignUp() {
     event.preventDefault();
 
     const nextErrors = {};
-    const email = form.email.trim().toLowerCase();
+    const email = normalizeEmail(form.email);
     if (!email) {
       nextErrors.email = 'Email is required.';
+    } else if (!isValidEmail(email)) {
+      nextErrors.email = 'Enter a valid email address.';
     }
     if (!form.password.trim()) nextErrors.password = 'Password is required.';
 
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length === 0) {
-      updateWorkerAccount(form);
+      updateWorkerAccount({ ...form, email });
       navigate('/worker/org-info');
     }
   }

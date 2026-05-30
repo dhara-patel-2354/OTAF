@@ -8,13 +8,14 @@ import {
   signOutWorker
 } from '../data/localDatabase.js';
 import { workerShelterId as fallbackWorkerShelterId } from '../data/mockData.js';
-import { isSupabaseConfigured } from '../data/supabaseClient.js';
+import { isSupabaseConfigured, supabase } from '../data/supabaseClient.js';
 import {
   createSupabaseWorkerAccount,
   loadCurrentWorkerFromSupabase,
   loadSheltersFromSupabase,
   signInSupabaseWorker,
   signOutSupabaseWorker,
+  syncApprovedWorkerToOrganization,
   updateSupabaseShelter
 } from '../data/supabaseDatabase.js';
 
@@ -36,6 +37,7 @@ function formatUpdatedAt() {
 export function AppDataProvider({ children }) {
   const [shelters, setShelters] = useState(() => loadShelters());
   const [currentWorker, setCurrentWorker] = useState(() => loadCurrentWorker());
+  const [isLoadingWorker, setIsLoadingWorker] = useState(isSupabaseConfigured);
   const [databaseError, setDatabaseError] = useState('');
   const [workerAccount, setWorkerAccount] = useState({
     email: '',
@@ -48,25 +50,57 @@ export function AppDataProvider({ children }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
+      setIsLoadingWorker(false);
       return;
     }
 
     async function loadSupabaseData() {
+      setIsLoadingWorker(true);
+
       try {
         const [supabaseShelters, supabaseWorker] = await Promise.all([
           loadSheltersFromSupabase(),
           loadCurrentWorkerFromSupabase()
         ]);
+        let nextShelters = supabaseShelters;
 
-        setShelters(supabaseShelters);
+        if (supabaseWorker?.approvalStatus === 'approved' && supabaseWorker.organizationId) {
+          const syncedShelter = await syncApprovedWorkerToOrganization(supabaseWorker);
+
+          if (syncedShelter) {
+            nextShelters = supabaseShelters.map((shelter) =>
+              shelter.id === syncedShelter.id ? syncedShelter : shelter
+            );
+          }
+        }
+
+        setShelters(nextShelters);
         setCurrentWorker(supabaseWorker);
         setDatabaseError('');
       } catch (error) {
         setDatabaseError(error.message);
+      } finally {
+        setIsLoadingWorker(false);
       }
     }
 
     loadSupabaseData();
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setCurrentWorker(null);
+        setIsLoadingWorker(false);
+        return;
+      }
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        loadSupabaseData();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   async function updateShelter(id, updates) {
@@ -125,6 +159,17 @@ export function AppDataProvider({ children }) {
 
     if (result.ok) {
       setCurrentWorker(result.worker);
+      if (result.updatedShelter) {
+        setShelters((currentShelters) =>
+          currentShelters.map((shelter) =>
+            shelter.id === result.updatedShelter.id ? result.updatedShelter : shelter
+          )
+        );
+      }
+      setWorkerAccount((currentAccount) => ({
+        ...currentAccount,
+        ...account
+      }));
     }
 
     return result;
@@ -137,6 +182,13 @@ export function AppDataProvider({ children }) {
 
     if (result.ok) {
       setCurrentWorker(result.worker);
+      if (result.updatedShelter) {
+        setShelters((currentShelters) =>
+          currentShelters.map((shelter) =>
+            shelter.id === result.updatedShelter.id ? result.updatedShelter : shelter
+          )
+        );
+      }
     }
 
     return result;
@@ -161,6 +213,7 @@ export function AppDataProvider({ children }) {
       workerShelter,
       workerShelterId,
       currentWorker,
+      isLoadingWorker,
       databaseError,
       isSupabaseConfigured,
       workerAccount,
@@ -170,7 +223,7 @@ export function AppDataProvider({ children }) {
       updateShelter,
       updateWorkerAccount
     }),
-    [shelters, workerShelter, workerShelterId, currentWorker, databaseError, workerAccount]
+    [shelters, workerShelter, workerShelterId, currentWorker, isLoadingWorker, databaseError, workerAccount]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

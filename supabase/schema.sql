@@ -104,7 +104,7 @@ create policy "Workers can create their profile"
   with check (auth.uid() = user_id);
 
 drop policy if exists "Workers can update their profile" on public.worker_profiles;
-create policy "Workers can update their profile"
-  on public.worker_profiles for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+
+-- Worker profile updates, including approval, are intentionally not allowed
+-- from the public client. Approve workers in the Supabase dashboard by editing
+-- worker_profiles.approval_status and worker_profiles.organization_id.

@@ -4,24 +4,101 @@ import { useState } from 'react';
 const filters = ['Availability', 'City', 'Services', 'Population'];
 
 function FilterButton({ label, options, value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const allLabel = `All ${label.toLowerCase()}`;
+  const menuOptions = ['', ...options];
+
+  function selectOption(option) {
+    onChange(option);
+    setIsOpen(false);
+  }
+
   return (
-    <label className="relative flex min-h-11 items-center justify-between gap-3 rounded-lg border border-that-border bg-that-card px-4 py-2.5 text-sm font-bold text-that-text shadow-sm transition hover:border-that-accent hover:bg-white">
-      <span>{value || label}</span>
-      <ChevronDown className="h-4 w-4 text-that-accent" strokeWidth={2.4} />
-      <select
-        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-        aria-label={label}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+    <div className="relative">
+      <button
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-that-border bg-that-card px-4 py-2.5 text-sm font-bold text-that-text shadow-sm transition hover:border-that-accent hover:bg-white"
+        type="button"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
       >
-        <option value="">All {label.toLowerCase()}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    </label>
+        <span>{value || label}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-that-accent transition ${isOpen ? 'rotate-180' : ''}`}
+          strokeWidth={2.4}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 z-20 mt-2 max-h-72 overflow-auto rounded-lg border border-that-border bg-that-card p-2.5 shadow-card">
+          <p className="px-2 pb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-that-muted">
+            {label}
+          </p>
+          <div className="grid gap-1">
+            {menuOptions.map((option) => (
+              <button
+                className={`rounded-md px-2 py-2 text-left text-sm font-bold transition hover:bg-that-soft ${
+                  option === value ? 'bg-that-soft text-that-text' : 'text-that-text'
+                }`}
+                key={option || allLabel}
+                type="button"
+                onClick={() => selectOption(option)}
+              >
+                {option || allLabel}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SortButton({ value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const sortOptions = ['Nearest', 'Availability', 'Name', 'Recently updated'];
+
+  function selectOption(option) {
+    onChange(option);
+    setIsOpen(false);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        className="flex min-h-11 items-center gap-3 rounded-lg border border-that-border bg-white px-4 py-2.5 text-sm font-bold text-that-text shadow-sm transition hover:border-that-accent hover:bg-that-soft"
+        type="button"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        {value}
+        <ChevronDown
+          className={`h-4 w-4 text-that-accent transition ${isOpen ? 'rotate-180' : ''}`}
+          strokeWidth={2.4}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-20 mt-2 min-w-full rounded-lg border border-that-border bg-that-card p-2.5 shadow-card">
+          <p className="px-2 pb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-that-muted">
+            Sort by
+          </p>
+          <div className="grid gap-1">
+            {sortOptions.map((option) => (
+              <button
+                className={`whitespace-nowrap rounded-md px-2 py-2 text-left text-sm font-bold transition hover:bg-that-soft ${
+                  option === value ? 'bg-that-soft text-that-text' : 'text-that-text'
+                }`}
+                key={option}
+                type="button"
+                onClick={() => selectOption(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -53,16 +130,18 @@ function ServiceFilterButton({ options, values, onChange }) {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 z-20 mt-2 max-h-80 overflow-auto rounded-lg border border-that-border bg-white p-3 shadow-card">
-          <p className="px-1 pb-2 text-sm font-bold text-that-muted">All Services</p>
-          <div className="grid gap-2">
+        <div className="absolute left-0 right-0 z-20 mt-2 max-h-72 overflow-auto rounded-lg border border-that-border bg-that-card p-2.5 shadow-card">
+          <p className="px-2 pb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-that-muted">
+            All Services
+          </p>
+          <div className="grid gap-1">
             {options.map((option) => (
               <label
-                className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-that-text"
+                className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm font-bold text-that-text transition hover:bg-that-soft"
                 key={option}
               >
                 <input
-                  className="h-4 w-4 rounded border-that-border text-that-accent focus:ring-that-accent"
+                  className="h-4 w-4 rounded border-that-border accent-that-accent focus:ring-that-accent"
                   type="checkbox"
                   checked={values.includes(option)}
                   onChange={() => toggleService(option)}
@@ -123,21 +202,7 @@ export default function FilterBar({
 
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-sm font-bold text-that-muted">Sort by</span>
-          <label className="relative flex min-h-11 items-center gap-3 rounded-lg border border-that-border bg-white px-4 py-2.5 text-sm font-bold text-that-text shadow-sm transition hover:border-that-accent hover:bg-that-soft">
-            {sortBy}
-            <ChevronDown className="h-4 w-4 text-that-accent" strokeWidth={2.4} />
-            <select
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              aria-label="Sort by"
-              value={sortBy}
-              onChange={(event) => onSortChange(event.target.value)}
-            >
-              <option value="Nearest">Nearest</option>
-              <option value="Availability">Availability</option>
-              <option value="Name">Name</option>
-              <option value="Recently updated">Recently updated</option>
-            </select>
-          </label>
+          <SortButton value={sortBy} onChange={onSortChange} />
         </div>
       </div>
 

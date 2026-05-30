@@ -4,7 +4,8 @@ import { useAppData } from '../context/AppDataContext.jsx';
 import PublicDashboard from './PublicDashboard.jsx';
 
 export default function WorkerPending() {
-  const { workerAccount } = useAppData();
+  const { currentWorker, workerAccount } = useAppData();
+  const organizationName = currentWorker?.organizationName || workerAccount.organizationName || 'your organization';
 
   return (
     <div className="relative min-h-screen bg-that-page text-that-text">
@@ -37,7 +38,7 @@ export default function WorkerPending() {
 
           <p className="mt-4 text-sm font-medium leading-5 text-that-text">
             Thank you so much for signing up! For security reasons, the app administrators will verify once again that{' '}
-            {workerAccount.organizationName || 'your organization'} exists and you have kind hearts.
+            {organizationName} exists and you have kind hearts.
             You will receive an email when you are officially onboard!
           </p>
         </section>

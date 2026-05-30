@@ -1,42 +1,43 @@
 import { Instagram } from 'lucide-react';
-import sfuChangLogo from '../assets/sfu-chang-placeholder.svg';
+import sfuChangLogo from '../assets/chang-logo.png';
 
 export default function Footer() {
   return (
-    <footer className="mt-5 bg-that-accentDark text-white">
-      <div className="mx-auto max-w-[1512px] px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="bg-that-accentDark text-white">
+      <div className="mx-auto max-w-[1512px] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <section>
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-white/70">
               We are proud client of
             </p>
             <img
-              className="mt-4 h-auto w-full max-w-60 rounded-lg border border-white/20 bg-white p-1 shadow-lg"
+              className="mt-2 h-auto w-full max-w-48 rounded-lg"
+              style={{ mixBlendMode: 'screen' }}
               src={sfuChangLogo}
               alt="SFU Chang Institute"
             />
           </section>
 
           <section>
-            <h2 className="text-lg font-extrabold">Contact Us</h2>
+            <h2 className="text-base font-extrabold">Contact Us</h2>
             <a
-              className="mt-4 block text-sm font-semibold text-white/82 transition hover:text-white"
+              className="mt-2 block text-sm font-semibold text-white/82 transition hover:text-white"
               href="mailto:info@techalonglabs.com"
             >
               info@techalonglabs.com
             </a>
             <a
-              className="mt-4 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/25 text-white transition hover:bg-white/10"
+              className="mt-2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/25 text-white transition hover:bg-white/10"
               href="#"
               aria-label="Instagram"
             >
-              <Instagram className="h-5 w-5" strokeWidth={2.2} />
+              <Instagram className="h-4 w-4" strokeWidth={2.2} />
             </a>
           </section>
 
           <section>
-            <h2 className="text-lg font-extrabold">Navigation</h2>
-            <div className="mt-4 space-y-3 text-sm font-semibold text-white/82">
+            <h2 className="text-base font-extrabold">Navigation</h2>
+            <div className="mt-2 space-y-1.5 text-sm font-semibold text-white/82">
               <a className="block transition hover:text-white" href="#">
                 About Us
               </a>
@@ -47,8 +48,8 @@ export default function Footer() {
           </section>
 
           <section>
-            <h2 className="text-lg font-extrabold">Projects</h2>
-            <div className="mt-4 space-y-3 text-sm font-semibold leading-6 text-white/82">
+            <h2 className="text-base font-extrabold">Projects</h2>
+            <div className="mt-2 space-y-1.5 text-sm font-semibold text-white/82">
               <a className="block transition hover:text-white" href="#">
                 One Tap Away Chatbot
               </a>
@@ -59,7 +60,10 @@ export default function Footer() {
           </section>
         </div>
 
-        <p className="mt-10 max-w-full overflow-hidden text-[clamp(3.4rem,12vw,11rem)] font-black leading-[0.82] tracking-normal text-white/18">
+        <p
+          className="mt-4 w-full text-center text-[clamp(1.8rem,5vw,4.4rem)] leading-none text-white"
+          style={{ fontWeight: 500, letterSpacing: '0.35em' }}
+        >
           TechAlong Labs
         </p>
       </div>
