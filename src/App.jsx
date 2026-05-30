@@ -11,7 +11,7 @@ import WorkerSignUp from './pages/WorkerSignUp.jsx';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AppDataProvider>
         <Routes>
           <Route path="/" element={<PublicDashboard />} />
