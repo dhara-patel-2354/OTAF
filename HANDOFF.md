@@ -143,6 +143,29 @@ username `resend`, password the Resend API key.
 
 ---
 
+## Security fixes
+
+Two holes in the RLS setup were closed. Both are applied to the live project.
+
+**Workers could approve themselves.** The insert policy on `worker_profiles`
+only checked that the row belonged to the caller. Anyone holding the anon key —
+which is public and shipped in the bundle — could sign up, insert their own
+profile with `approval_status = 'approved'` and `organization_id` pointing at
+any shelter, and then edit that shelter's public listing. Manual approval was
+the only gate on write access, and it could be skipped entirely. New profiles
+are now forced to `pending`.
+
+**Approved workers could edit any field.** RLS decides which rows are writable,
+not which columns, so a worker could rewrite their organization's name,
+program, location or type and impersonate another shelter. Update is now
+granted only on the fields the dashboard actually edits: `status`,
+`population_categories`, `service_categories`, `more_info`, `phone`,
+`toll_free`, `text_only`, `email`, `website`, `updated_at_label`, `updated_at`.
+
+Note that `organization_id` is suggested by a fuzzy name match in the client at
+signup. **Check it points at the right organization before approving a worker**
+— it is a client-supplied value and should not be trusted as-is.
+
 ## Bugs found along the way
 
 **Contact fields were being dropped.** `toShelter` never mapped `phone`,
