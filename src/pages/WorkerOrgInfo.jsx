@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Check, Plus, Search } from 'lucide-react';
 import Navbar from '../components/Navbar.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
@@ -49,6 +49,15 @@ export default function WorkerOrgInfo() {
   const filteredCategories = categoryOptions.filter((category) =>
     category.toLowerCase().includes(categorySearch.trim().toLowerCase())
   );
+
+  // The email and password are collected on the previous step and only held in
+  // memory, so a refresh or a direct link lands here with nothing to sign up
+  // with. Supabase reads that as an anonymous signup and rejects it with a
+  // message that has nothing to do with what went wrong; send them back to
+  // re-enter the credentials instead.
+  if (!workerAccount.email || !workerAccount.password) {
+    return <Navigate to="/worker/sign-up" replace />;
+  }
 
   function toggleCategory(category) {
     if (populationOptions.includes(category)) {
