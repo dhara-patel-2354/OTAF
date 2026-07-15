@@ -1,0 +1,8 @@
+project_id = "ptyzorsszvxpwhfldtox"
+
+# The approval-email function is called by a Database Webhook, which sends the
+# project's key in the Authorization header. Keep JWT verification on: without
+# it the endpoint is public and anyone could post a fake approval payload to
+# send mail from the verified sending domain.
+[functions.approval-email]
+verify_jwt = true
