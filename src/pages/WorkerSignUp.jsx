@@ -23,7 +23,11 @@ export default function WorkerSignUp() {
     } else if (!isValidEmail(email)) {
       nextErrors.email = 'Enter a valid email address.';
     }
-    if (!form.password.trim()) nextErrors.password = 'Password is required.';
+    if (!form.password.trim()) {
+      nextErrors.password = 'Password is required.';
+    } else if (form.password.length < 8) {
+      nextErrors.password = 'Password must be at least 8 characters.';
+    }
 
     setErrors(nextErrors);
 
