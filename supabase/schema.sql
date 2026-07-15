@@ -119,12 +119,43 @@ create policy "Workers can read their profile"
   using (auth.uid() = user_id);
 
 drop policy if exists "Workers can create their profile" on public.worker_profiles;
+
+-- SECURITY: the with check must force approval_status = 'pending'. Without it,
+-- anyone holding the public anon key could insert their own profile with
+-- approval_status = 'approved' and organization_id set to any organization,
+-- bypassing admin verification entirely and gaining write access to that
+-- organization's public listing.
 create policy "Workers can create their profile"
   on public.worker_profiles for insert
-  with check (auth.uid() = user_id);
+  with check (
+    auth.uid() = user_id
+    and approval_status = 'pending'
+  );
 
 drop policy if exists "Workers can update their profile" on public.worker_profiles;
 
 -- Worker profile updates, including approval, are intentionally not allowed
 -- from the public client. Approve workers in the Supabase dashboard by editing
 -- worker_profiles.approval_status and worker_profiles.organization_id.
+-- IMPORTANT: before approving, verify that organization_id was assigned
+-- correctly — it is suggested by the client at signup via a fuzzy name match
+-- and must never be trusted as-is.
+
+-- SECURITY: limit which columns an approved worker can change on their
+-- organization. RLS decides which rows are writable; these column-level grants
+-- decide which fields. Without them a worker could rewrite the organization's
+-- name, program, location, or type and impersonate another shelter.
+revoke update on public.organizations from anon, authenticated;
+grant update (
+  status,
+  population_categories,
+  service_categories,
+  more_info,
+  phone,
+  toll_free,
+  text_only,
+  email,
+  website,
+  updated_at_label,
+  updated_at
+) on public.organizations to authenticated;
