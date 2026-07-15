@@ -19,6 +19,24 @@ function writeJson(key, value) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+// The signed-in worker is kept in sessionStorage (not localStorage) so closing
+// the browser requires credentials again, matching the Supabase auth client.
+function readCurrentWorkerEmail() {
+  try {
+    return window.sessionStorage.getItem(storageKeys.currentWorkerEmail);
+  } catch {
+    return null;
+  }
+}
+
+function writeCurrentWorkerEmail(email) {
+  try {
+    window.sessionStorage.setItem(storageKeys.currentWorkerEmail, email);
+  } catch {
+    // Storage can be unavailable (private mode); sign-in stays in memory only.
+  }
+}
+
 function normalize(value) {
   return value.trim().toLowerCase();
 }
@@ -57,7 +75,7 @@ export function loadWorkers() {
 
 export function loadCurrentWorker() {
   const workers = loadWorkers();
-  const currentWorkerEmail = window.localStorage.getItem(storageKeys.currentWorkerEmail);
+  const currentWorkerEmail = readCurrentWorkerEmail();
   return workers.find((worker) => worker.email === currentWorkerEmail) ?? null;
 }
 
@@ -88,7 +106,7 @@ export function createWorkerAccount(account, shelters) {
   };
 
   writeJson(storageKeys.workers, [...workers, worker]);
-  window.localStorage.setItem(storageKeys.currentWorkerEmail, worker.email);
+  writeCurrentWorkerEmail(worker.email);
 
   return {
     ok: true,
@@ -108,7 +126,7 @@ export function signInWorker(email, password) {
     };
   }
 
-  window.localStorage.setItem(storageKeys.currentWorkerEmail, worker.email);
+  writeCurrentWorkerEmail(worker.email);
 
   return {
     ok: true,
@@ -117,5 +135,11 @@ export function signInWorker(email, password) {
 }
 
 export function signOutWorker() {
-  window.localStorage.removeItem(storageKeys.currentWorkerEmail);
+  try {
+    window.sessionStorage.removeItem(storageKeys.currentWorkerEmail);
+    // Clear the pre-sessionStorage pointer too, so an old sign-in cannot linger.
+    window.localStorage.removeItem(storageKeys.currentWorkerEmail);
+  } catch {
+    // Storage unavailable; nothing to clear.
+  }
 }

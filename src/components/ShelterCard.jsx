@@ -15,6 +15,19 @@ function getStatusClass(shelter) {
   return statusClasses[shelter.status] ?? 'bg-that-gray';
 }
 
+// `tel:` only understands digits, `+`, and a few separators, so drop the
+// formatting the CSV uses (for example "1-800-563-0808 (24hr)").
+function toTelHref(shelter) {
+  const number = shelter.phone || shelter.tollFree || '';
+  const dialable = number.replace(/[^\d+]/g, '');
+  return dialable ? `tel:${dialable}` : '';
+}
+
+function toMailtoHref(shelter) {
+  const email = (shelter.email || '').trim();
+  return email ? `mailto:${email}` : '';
+}
+
 function InfoRow({ children, icon: Icon }) {
   return (
     <div className="flex items-center gap-2 rounded-md border border-that-border/70 bg-that-soft px-3 py-2 text-sm font-semibold text-that-muted">
@@ -27,6 +40,8 @@ function InfoRow({ children, icon: Icon }) {
 export default function ShelterCard({ shelter }) {
   const [expanded, setExpanded] = useState(false);
   const dotClass = getStatusClass(shelter);
+  const telHref = toTelHref(shelter);
+  const mailtoHref = toMailtoHref(shelter);
 
   return (
     <article className="flex h-full w-full flex-col rounded-lg border border-that-border bg-that-card p-4 shadow-card transition hover:border-that-accent/70 hover:shadow-lg">
@@ -88,6 +103,11 @@ export default function ShelterCard({ shelter }) {
         <button
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-that-accent px-3 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-that-accentDark"
           type="button"
+          disabled={!telHref}
+          title={telHref ? `Call ${shelter.phone || shelter.tollFree}` : 'No phone number on file'}
+          onClick={() => {
+            window.location.href = telHref;
+          }}
         >
           <Phone className="h-3.5 w-3.5" strokeWidth={2.3} />
           Call
@@ -95,6 +115,11 @@ export default function ShelterCard({ shelter }) {
         <button
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-that-accent px-3 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-that-accentDark"
           type="button"
+          disabled={!mailtoHref}
+          title={mailtoHref ? `Email ${shelter.email}` : 'No email address on file'}
+          onClick={() => {
+            window.location.href = mailtoHref;
+          }}
         >
           <Mail className="h-3.5 w-3.5" strokeWidth={2.3} />
           Email

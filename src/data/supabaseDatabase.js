@@ -12,6 +12,11 @@ function toShelter(record) {
     populationCategories: record.population_categories ?? [],
     serviceCategories: record.service_categories ?? [],
     moreInfo: record.more_info ?? '',
+    phone: record.phone ?? '',
+    tollFree: record.toll_free ?? '',
+    textOnly: record.text_only ?? '',
+    email: record.email ?? '',
+    website: record.website ?? '',
     partnered: record.partnered
   };
 }
@@ -195,12 +200,41 @@ export async function signOutSupabaseWorker() {
   await supabase.auth.signOut();
 }
 
+// Streams organization changes so every open dashboard reflects an update
+// without a page refresh. Returns an unsubscribe function.
+export function subscribeToOrganizations({ onUpsert, onDelete }) {
+  const channel = supabase
+    .channel('organizations-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'organizations' },
+      (payload) => {
+        if (payload.eventType === 'DELETE') {
+          onDelete?.(payload.old?.id);
+          return;
+        }
+
+        onUpsert?.(toShelter(payload.new));
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 export async function updateSupabaseShelter(id, updates) {
   const payload = {
     status: updates.status,
     population_categories: updates.populationCategories,
     service_categories: updates.serviceCategories,
     more_info: updates.moreInfo,
+    phone: updates.phone,
+    toll_free: updates.tollFree,
+    text_only: updates.textOnly,
+    email: updates.email,
+    website: updates.website,
     updated_at_label: updates.updatedAt,
     updated_at: new Date().toISOString()
   };

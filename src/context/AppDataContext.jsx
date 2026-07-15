@@ -15,6 +15,7 @@ import {
   loadSheltersFromSupabase,
   signInSupabaseWorker,
   signOutSupabaseWorker,
+  subscribeToOrganizations,
   syncApprovedWorkerToOrganization,
   updateSupabaseShelter
 } from '../data/supabaseDatabase.js';
@@ -100,7 +101,25 @@ export function AppDataProvider({ children }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    const unsubscribeFromOrganizations = subscribeToOrganizations({
+      onUpsert: (shelter) => {
+        setShelters((currentShelters) =>
+          currentShelters.some((current) => current.id === shelter.id)
+            ? currentShelters.map((current) => (current.id === shelter.id ? shelter : current))
+            : [...currentShelters, shelter]
+        );
+      },
+      onDelete: (shelterId) => {
+        setShelters((currentShelters) =>
+          currentShelters.filter((current) => current.id !== shelterId)
+        );
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      unsubscribeFromOrganizations();
+    };
   }, []);
 
   async function updateShelter(id, updates) {

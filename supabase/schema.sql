@@ -8,6 +8,8 @@ create table if not exists public.organizations (
   phone text,
   toll_free text,
   text_only text,
+  email text,
+  website text,
   type text not null,
   status text not null default 'Unknown',
   population_categories text[] not null default '{}',
@@ -31,8 +33,24 @@ create table if not exists public.worker_profiles (
   created_at timestamptz not null default now()
 );
 
+-- `create table if not exists` above does not add columns to a table that
+-- already exists, so add the contact columns explicitly for existing databases.
+alter table public.organizations add column if not exists email text;
+alter table public.organizations add column if not exists website text;
+
 alter table public.organizations enable row level security;
 alter table public.worker_profiles enable row level security;
+
+-- Realtime has to be switched on per table, otherwise the client subscription
+-- connects but never receives a change. Ignore the error when it is already on.
+do $$
+begin
+  alter publication supabase_realtime add table public.organizations;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end;
+$$;
 
 create or replace function public.prepare_organization_import()
 returns trigger
@@ -52,7 +70,9 @@ begin
       ' | ',
       case when nullif(new.phone, '') is not null then 'Phone: ' || new.phone end,
       case when nullif(new.toll_free, '') is not null then 'Toll free: ' || new.toll_free end,
-      case when nullif(new.text_only, '') is not null then 'Text only: ' || new.text_only end
+      case when nullif(new.text_only, '') is not null then 'Text only: ' || new.text_only end,
+      case when nullif(new.email, '') is not null then 'Email: ' || new.email end,
+      case when nullif(new.website, '') is not null then 'Website: ' || new.website end
     ));
   end if;
 

@@ -92,6 +92,12 @@ function parseTransitionHousesCsv(csv) {
         moreInfo: contactLines.length
           ? contactLines.join(' | ')
           : 'Contact information was not included in the CSV.',
+        phone: record.Phone ?? '',
+        tollFree: record['Toll Free'] ?? '',
+        textOnly: record['Text Only'] ?? '',
+        // The CSV carries no email or website; workers fill these in later.
+        email: record.Email ?? '',
+        website: record.Website ?? '',
         partnered: true
       };
     });

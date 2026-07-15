@@ -32,6 +32,28 @@ function EditablePill({ active, label, onClick }) {
 }
 
 function EditableSection({ options, title, values, onToggle }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  // Values that came from the CSV or a previous custom entry are not in the
+  // hardcoded option list, so merge them in or they would render as missing.
+  const visibleOptions = [...new Set([...options, ...values])];
+
+  function addDraft() {
+    const label = draft.trim();
+
+    if (!label) {
+      return;
+    }
+
+    if (!values.includes(label)) {
+      onToggle(label);
+    }
+
+    setDraft('');
+    setIsAdding(false);
+  }
+
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -40,13 +62,46 @@ function EditableSection({ options, title, values, onToggle }) {
           className="flex h-7 w-7 items-center justify-center rounded-full border border-that-border bg-white text-that-accent transition hover:border-that-accent hover:bg-that-soft"
           type="button"
           aria-label={`Add ${title.toLowerCase()}`}
+          aria-expanded={isAdding}
+          onClick={() => setIsAdding((current) => !current)}
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
         </button>
       </div>
 
+      {isAdding && (
+        <div className="flex items-center gap-2">
+          <input
+            className="min-w-0 flex-1 rounded-md border border-that-border bg-white px-2.5 py-1.5 text-xs font-medium text-that-text outline-none transition focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
+            value={draft}
+            autoFocus
+            placeholder={`Add ${title.toLowerCase()}`}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              // This sits inside the dashboard form; Enter would submit it.
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                addDraft();
+              }
+
+              if (event.key === 'Escape') {
+                setDraft('');
+                setIsAdding(false);
+              }
+            }}
+          />
+          <button
+            className="rounded-md border border-that-border bg-white px-2.5 py-1.5 text-xs font-bold text-that-text transition hover:border-that-accent hover:bg-that-soft"
+            type="button"
+            onClick={addDraft}
+          >
+            Add
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
-        {options.map((option) => (
+        {visibleOptions.map((option) => (
           <EditablePill
             key={option}
             label={option}
@@ -126,9 +181,12 @@ export default function WorkerDashboard() {
       });
   }, [filters, shelters, sortBy]);
 
+  // Only resync when a different organization loads. Realtime pushes a new
+  // workerShelter object on every remote change, and resyncing on those would
+  // discard whatever the worker is part way through typing.
   useEffect(() => {
     setForm(workerShelter);
-  }, [workerShelter]);
+  }, [workerShelter?.id]);
 
   if (!currentWorker) {
     return <Navigate to="/worker/sign-in" replace />;
