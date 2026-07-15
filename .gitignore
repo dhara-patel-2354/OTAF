@@ -4,3 +4,9 @@ dist/
 *.log
 .env
 .env.local
+
+# Supabase CLI writes the linked project's state here.
+supabase/.temp/
+
+# Local snapshots of the project, kept outside version control.
+ui-backups/
