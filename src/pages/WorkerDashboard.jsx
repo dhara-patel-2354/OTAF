@@ -6,6 +6,7 @@ import Footer from '../components/Footer.jsx';
 import Navbar from '../components/Navbar.jsx';
 import ShelterCard from '../components/ShelterCard.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
+import { isValidEmail, normalizeEmail } from '../data/email.js';
 import { populationOptions, serviceOptions } from '../data/mockData.js';
 
 function toggleValue(values, value) {
@@ -126,6 +127,7 @@ export default function WorkerDashboard() {
   const [sortBy, setSortBy] = useState('Nearest');
   const [pendingStatus, setPendingStatus] = useState('');
   const [saved, setSaved] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const [visibleCount, setVisibleCount] = useState(5);
 
   const filterOptions = useMemo(
@@ -218,11 +220,25 @@ export default function WorkerDashboard() {
 
   function handleSubmit(event) {
     event.preventDefault();
+
+    // An invalid address would save fine and then produce a mailto: link that
+    // silently goes nowhere, so reject it here. Empty is allowed: it just
+    // leaves the Email button disabled.
+    const email = normalizeEmail(form.email ?? '');
+
+    if (email && !isValidEmail(email)) {
+      setEmailError('Enter a valid email address.');
+      return;
+    }
+
+    setEmailError('');
     updateShelter(workerShelterId, {
       status: form.status,
       populationCategories: form.populationCategories,
       serviceCategories: form.serviceCategories,
-      moreInfo: form.moreInfo
+      moreInfo: form.moreInfo,
+      email,
+      website: (form.website ?? '').trim()
     });
     setSaved(true);
   }
@@ -347,6 +363,41 @@ export default function WorkerDashboard() {
                 })
               }
             />
+
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold text-that-text">Contact Details</h3>
+              <span className="block text-xs font-medium leading-5 text-that-muted">
+                The Email button on your card stays greyed out until an address is
+                saved here.
+              </span>
+
+              <label className="block">
+                <span className="text-xs font-bold text-that-muted">Email</span>
+                <input
+                  className="mt-1.5 w-full rounded-lg border border-that-border bg-white px-3 py-2.5 text-sm font-medium text-that-text outline-none transition focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
+                  type="email"
+                  value={form.email ?? ''}
+                  onChange={(event) => setForm({ ...form, email: event.target.value })}
+                  placeholder="intake@example.org"
+                />
+                {emailError && (
+                  <span className="mt-1.5 block text-xs font-semibold text-that-red">
+                    {emailError}
+                  </span>
+                )}
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold text-that-muted">Website</span>
+                <input
+                  className="mt-1.5 w-full rounded-lg border border-that-border bg-white px-3 py-2.5 text-sm font-medium text-that-text outline-none transition focus:border-that-accent focus:ring-4 focus:ring-that-accent/10"
+                  type="url"
+                  value={form.website ?? ''}
+                  onChange={(event) => setForm({ ...form, website: event.target.value })}
+                  placeholder="https://example.org"
+                />
+              </label>
+            </section>
 
             <label className="block">
               <span className="text-sm font-semibold text-that-text">More Information</span>

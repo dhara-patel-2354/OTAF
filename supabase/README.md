@@ -2,17 +2,17 @@
 
 1. Create a Supabase project.
 2. Open the SQL editor and run `supabase/schema.sql`.
-3. Import `BC_Transition_Houses_Safe_Homes.csv` into the `organizations` table, mapping:
-   - `Location` -> `location`
-   - `Organization` -> `organization`
-   - `Program` -> `program`
-   - `Phone` -> `phone`
-   - `Toll Free` -> `toll_free`
-   - `Text Only` -> `text_only`
-   - `Type` -> `type`
-4. Do not map an `id` column. The database creates one automatically.
-5. Copy `.env.example` to `.env.local` and add your project URL and anon key.
-6. Restart the Vite dev server.
+3. In the SQL editor, run `supabase/seed.sql` to import the organizations from
+   `BC_Transition_Houses_Safe_Homes.csv`. It is generated from that CSV and is
+   safe to re-run; existing rows are skipped. `population_categories`,
+   `service_categories` and `more_info` are filled in by the
+   `prepare_organization_import` trigger, so the seed does not set them.
+4. Copy `.env.example` to `.env.local` and add your project URL and anon key.
+5. Restart the Vite dev server (env vars are only read at startup).
+
+To regenerate `seed.sql` after the CSV changes, see the id slug format in
+`src/data/mockData.js`; the ids must match so the local CSV fallback and
+Supabase agree.
 
 When `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are present, the app uses Supabase. Without them, it falls back to the local browser database.
 
